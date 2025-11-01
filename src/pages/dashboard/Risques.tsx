@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { mockRisquesIA } from "@/data/mockData";
+import { mockRisquesIA, mockPatients } from "@/data/mockData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Eye, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PatientCard } from "@/components/PatientCard";
 
 export default function Risques() {
   const getSemaphoreColor = (niveau: string) => {
@@ -71,6 +72,16 @@ export default function Risques() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Fiches Patientes */}
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Fiches Patientes à Risque</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {mockPatients.slice(0, 6).map((patient) => (
+            <PatientCard key={patient.id} patient={patient} />
+          ))}
+        </div>
       </div>
 
       {/* Tableau des risques */}

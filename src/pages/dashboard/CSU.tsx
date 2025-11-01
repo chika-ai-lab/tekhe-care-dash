@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { QrCode, Download, Search, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { PatientCard } from "@/components/PatientCard";
 
 export default function CSU() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,6 +98,16 @@ export default function CSU() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Fiches Patientes */}
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Fiches Patientes CSU</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {filteredPatients.slice(0, 6).map((patient) => (
+            <PatientCard key={patient.id} patient={patient} />
+          ))}
+        </div>
       </div>
 
       {/* Liste des patientes */}
