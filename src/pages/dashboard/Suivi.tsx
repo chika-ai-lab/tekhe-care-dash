@@ -5,8 +5,18 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Suivi() {
+  const { user } = useAuth();
+  
+  // Filtrer les rendez-vous selon le rôle de l'utilisateur
+  const userRdvRetards = user?.role === 'sage_femme'
+    ? mockRdvRetards.filter(rdv => rdv.agent === `${user.prenom} ${user.nom}`)
+    : user?.role === 'responsable_structure' && user.structure
+    ? mockRdvRetards.filter(rdv => rdv.structure === user.structure)
+    : mockRdvRetards;
+  
   const handleRappelSMS = (telephone: string, nom: string) => {
     toast.success(`Rappel SMS envoyé à ${nom} (${telephone})`);
   };
@@ -62,7 +72,7 @@ export default function Suivi() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockRdvRetards.map((rdv) => (
+              {userRdvRetards.map((rdv) => (
                 <TableRow key={rdv.id}>
                   <TableCell className="font-medium">{rdv.patient_nom}</TableCell>
                   <TableCell>{rdv.age} ans</TableCell>

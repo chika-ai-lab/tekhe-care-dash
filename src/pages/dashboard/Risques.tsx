@@ -6,8 +6,23 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Eye, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PatientCard } from "@/components/PatientCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { filterPatientsByUser, filterRisquesByUser } from "@/lib/dataFilters";
 
 export default function Risques() {
+  const { user } = useAuth();
+  
+  // Filtrer les données selon le rôle de l'utilisateur
+  const userPatients = filterPatientsByUser(mockPatients, user);
+  const userRisques = filterRisquesByUser(mockRisquesIA, mockPatients, user);
+  
+  // Calculer les stats basées sur les risques filtrés
+  const stats = {
+    rouge: userRisques.filter(r => r.niveau === 'rouge').length,
+    orange: userRisques.filter(r => r.niveau === 'orange').length,
+    vert: userRisques.filter(r => r.niveau === 'vert').length,
+  };
+  
   const getSemaphoreColor = (niveau: string) => {
     switch (niveau) {
       case 'rouge':
@@ -41,7 +56,7 @@ export default function Risques() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Alertes Rouges</p>
-                <p className="text-2xl font-bold">12</p>
+                <p className="text-2xl font-bold">{stats.rouge}</p>
               </div>
             </div>
           </CardContent>
@@ -54,7 +69,7 @@ export default function Risques() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Alertes Orange</p>
-                <p className="text-2xl font-bold">48</p>
+                <p className="text-2xl font-bold">{stats.orange}</p>
               </div>
             </div>
           </CardContent>
@@ -67,7 +82,7 @@ export default function Risques() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Suivi Normal</p>
-                <p className="text-2xl font-bold">1188</p>
+                <p className="text-2xl font-bold">{stats.vert}</p>
               </div>
             </div>
           </CardContent>
@@ -78,7 +93,7 @@ export default function Risques() {
       <div>
         <h3 className="text-xl font-semibold mb-4">Fiches Patientes à Risque</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {mockPatients.slice(0, 6).map((patient) => (
+          {userPatients.slice(0, 6).map((patient) => (
             <PatientCard key={patient.id} patient={patient} />
           ))}
         </div>
@@ -105,7 +120,7 @@ export default function Risques() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockRisquesIA.map((risque) => (
+              {userRisques.map((risque) => (
                 <TableRow key={risque.id}>
                   <TableCell className="font-medium">{risque.patient_nom}</TableCell>
                   <TableCell>{risque.age} ans</TableCell>

@@ -8,9 +8,15 @@ import { QrCode, Download, Search, CheckCircle, Clock, AlertCircle } from "lucid
 import { toast } from "sonner";
 import { useState } from "react";
 import { PatientCard } from "@/components/PatientCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { filterPatientsByUser } from "@/lib/dataFilters";
 
 export default function CSU() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Filtrer les patients selon le rôle de l'utilisateur
+  const userPatients = filterPatientsByUser(mockPatients, user);
 
   const getStatusBadge = (statut: string) => {
     switch (statut) {
@@ -33,16 +39,16 @@ export default function CSU() {
     toast.success("QR Codes batch générés pour les patients sélectionnés");
   };
 
-  const filteredPatients = mockPatients.filter(patient =>
+  const filteredPatients = userPatients.filter(patient =>
     patient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.telephone.includes(searchTerm)
   );
 
   const stats = {
-    actif: mockPatients.filter(p => p.statut_csu === 'actif').length,
-    en_attente: mockPatients.filter(p => p.statut_csu === 'en_attente').length,
-    a_renouveler: mockPatients.filter(p => p.statut_csu === 'a_renouveler').length,
+    actif: userPatients.filter(p => p.statut_csu === 'actif').length,
+    en_attente: userPatients.filter(p => p.statut_csu === 'en_attente').length,
+    a_renouveler: userPatients.filter(p => p.statut_csu === 'a_renouveler').length,
   };
 
   return (

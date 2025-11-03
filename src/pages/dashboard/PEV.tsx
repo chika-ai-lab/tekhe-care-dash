@@ -5,13 +5,23 @@ import { Progress } from "@/components/ui/progress";
 import { mockVaccins, mockPatients } from "@/data/mockData";
 import { Syringe, AlertCircle, CheckCircle, Calendar, Baby, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { filterPatientsByUser, filterVisitesByUser } from "@/lib/dataFilters";
 
 export default function PEV() {
+  const { user } = useAuth();
   const [filtreStatut, setFiltreStatut] = useState<string>("tous");
+  
+  // Filtrer les patients selon le rôle de l'utilisateur
+  const userPatients = filterPatientsByUser(mockPatients, user);
+  const patientIds = new Set(userPatients.map(p => p.id));
+  
+  // Filtrer les vaccins pour les patients de l'utilisateur
+  const userVaccins = mockVaccins.filter(v => patientIds.has(v.patient_id));
 
   const vaccins = filtreStatut === "tous" 
-    ? mockVaccins 
-    : mockVaccins.filter(v => v.statut === filtreStatut);
+    ? userVaccins 
+    : userVaccins.filter(v => v.statut === filtreStatut);
 
   const getStatutBadge = (statut: string) => {
     const variants = {
@@ -36,10 +46,10 @@ export default function PEV() {
   };
 
   const statsVaccins = {
-    total: mockVaccins.length,
-    realises: mockVaccins.filter(v => v.statut === 'realise').length,
-    retard: mockVaccins.filter(v => v.statut === 'retard').length,
-    prevus: mockVaccins.filter(v => v.statut === 'prevu').length,
+    total: userVaccins.length,
+    realises: userVaccins.filter(v => v.statut === 'realise').length,
+    retard: userVaccins.filter(v => v.statut === 'retard').length,
+    prevus: userVaccins.filter(v => v.statut === 'prevu').length,
   };
 
   const tauxCouverture = Math.round((statsVaccins.realises / statsVaccins.total) * 100);
@@ -129,8 +139,8 @@ export default function PEV() {
         <CardContent>
           <div className="space-y-4">
             {['BCG', 'Polio0', 'Penta1', 'Penta2', 'Penta3'].map((vaccin) => {
-              const total = mockVaccins.filter(v => v.vaccin === vaccin).length;
-              const realises = mockVaccins.filter(v => v.vaccin === vaccin && v.statut === 'realise').length;
+              const total = userVaccins.filter(v => v.vaccin === vaccin).length;
+              const realises = userVaccins.filter(v => v.vaccin === vaccin && v.statut === 'realise').length;
               const taux = total > 0 ? Math.round((realises / total) * 100) : 0;
 
               return (

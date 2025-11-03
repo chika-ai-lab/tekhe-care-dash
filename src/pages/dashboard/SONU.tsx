@@ -1,16 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { mockReferencesSonu } from "@/data/mockData";
+import { mockReferencesSonu, mockPatients } from "@/data/mockData";
 import { Clock, MapPin, AlertCircle, CheckCircle, Ambulance, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { filterReferencesByUser } from "@/lib/dataFilters";
 
 export default function SONU() {
+  const { user } = useAuth();
   const [filtreStatut, setFiltreStatut] = useState<string>("tous");
+  
+  // Filtrer les références selon le rôle de l'utilisateur
+  const userReferences = filterReferencesByUser(mockReferencesSonu, mockPatients, user);
 
   const references = filtreStatut === "tous" 
-    ? mockReferencesSonu 
-    : mockReferencesSonu.filter(r => r.statut === filtreStatut);
+    ? userReferences 
+    : userReferences.filter(r => r.statut === filtreStatut);
 
   const getStatutBadge = (statut: string) => {
     const variants = {
@@ -54,7 +60,7 @@ export default function SONU() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              {mockReferencesSonu.filter(r => r.statut === 'alerte').length}
+              {userReferences.filter(r => r.statut === 'alerte').length}
             </div>
           </CardContent>
         </Card>
@@ -65,7 +71,7 @@ export default function SONU() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-accent">
-              {mockReferencesSonu.filter(r => r.statut === 'en_route').length}
+              {userReferences.filter(r => r.statut === 'en_route').length}
             </div>
           </CardContent>
         </Card>
@@ -76,7 +82,7 @@ export default function SONU() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockReferencesSonu.filter(r => r.statut === 'admis').length}
+              {userReferences.filter(r => r.statut === 'admis').length}
             </div>
           </CardContent>
         </Card>
@@ -87,7 +93,7 @@ export default function SONU() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              {Math.round(mockReferencesSonu.reduce((acc, r) => acc + (r.delai_minutes || 0), 0) / mockReferencesSonu.length)} min
+              {userReferences.length > 0 ? Math.round(userReferences.reduce((acc, r) => acc + (r.delai_minutes || 0), 0) / userReferences.length) : 0} min
             </div>
           </CardContent>
         </Card>
