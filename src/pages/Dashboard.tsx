@@ -9,7 +9,8 @@ import {
   Shield,
   Syringe,
   Activity,
-  Database
+  Database,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,10 +64,19 @@ export default function Dashboard() {
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <h1 className="text-3xl font-bold">Tableau de bord TEKHE</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">Date range</Button>
-          <Button variant="outline" size="sm">District ↓</Button>
-          <Button variant="outline" size="sm">Structure ↓</Button>
-          <Button size="sm">Export CSV/JSON</Button>
+          <Button variant="outline" size="sm">
+            <Calendar className="h-4 w-4 mr-2" />
+            Date range
+          </Button>
+          {user?.role === 'responsable_district' && (
+            <Button variant="outline" size="sm">
+              Structure ↓
+            </Button>
+          )}
+          <Button size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
         </div>
       </div>
 
