@@ -7,21 +7,50 @@ import { Syringe, AlertCircle, CheckCircle, Calendar, Baby, TrendingUp } from "l
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { filterPatientsByUser, filterVisitesByUser } from "@/lib/dataFilters";
+import { DataFilters } from "@/components/DataFilters";
+import { SearchBar } from "@/components/SearchBar";
 
 export default function PEV() {
   const { user } = useAuth();
   const [filtreStatut, setFiltreStatut] = useState<string>("tous");
-  
-  // Filtrer les patients selon le rôle de l'utilisateur
-  const userPatients = filterPatientsByUser(mockPatients, user);
-  const patientIds = new Set(userPatients.map(p => p.id));
-  
-  // Filtrer les vaccins pour les patients de l'utilisateur
-  const userVaccins = mockVaccins.filter(v => patientIds.has(v.patient_id));
+  const [selectedStructure, setSelectedStructure] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const vaccins = filtreStatut === "tous" 
-    ? userVaccins 
+  // Filtrer les patients selon le rôle de l'utilisateur
+  let userPatients = filterPatientsByUser(mockPatients, user);
+
+  // Filtrage par structure pour responsable district
+  if (user?.role === 'responsable_district' && selectedStructure !== "all") {
+    userPatients = userPatients.filter(p => p.structure === selectedStructure);
+  }
+
+  const patientIds = new Set(userPatients.map(p => p.id));
+
+  // Filtrer les vaccins pour les patients de l'utilisateur
+  let userVaccins = mockVaccins.filter(v => patientIds.has(v.patient_id));
+
+  // Filtrage par structure pour les vaccins (pour cohérence)
+  if (user?.role === 'responsable_district' && selectedStructure !== "all") {
+    userVaccins = userVaccins.filter(v => v.structure === selectedStructure);
+  }
+
+  // Filtrage par statut
+  const filteredByStatus = filtreStatut === "tous"
+    ? userVaccins
     : userVaccins.filter(v => v.statut === filtreStatut);
+
+  // Filtrage par recherche
+  const vaccins = searchTerm
+    ? filteredByStatus.filter((v) => {
+        const patient = mockPatients.find(p => p.id === v.patient_id);
+        return (
+          patient?.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patient?.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          v.vaccin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          v.structure.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      })
+    : filteredByStatus;
 
   const getStatutBadge = (statut: string) => {
     const variants = {
@@ -56,9 +85,15 @@ export default function PEV() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">PEV & Nutrition</h1>
-        <p className="text-muted-foreground">Programme Élargi de Vaccination et suivi nutritionnel</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">PEV & Nutrition</h1>
+          <p className="text-muted-foreground">Programme Élargi de Vaccination et suivi nutritionnel</p>
+        </div>
+        <DataFilters
+          selectedStructure={selectedStructure}
+          onStructureChange={setSelectedStructure}
+        />
       </div>
 
       {/* Stats globales */}
@@ -162,32 +197,45 @@ export default function PEV() {
         </CardContent>
       </Card>
 
-      {/* Filtres */}
-      <div className="flex gap-2">
-        <Button 
-          variant={filtreStatut === "tous" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("tous")}
-        >
-          Tous
-        </Button>
-        <Button 
-          variant={filtreStatut === "retard" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("retard")}
-        >
-          En retard
-        </Button>
-        <Button 
-          variant={filtreStatut === "prevu" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("prevu")}
-        >
-          Prévus
-        </Button>
-        <Button 
-          variant={filtreStatut === "realise" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("realise")}
-        >
-          Réalisés
-        </Button>
+      {/* Filtres et Recherche */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={filtreStatut === "tous" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("tous")}
+            >
+              Tous
+            </Button>
+            <Button
+              variant={filtreStatut === "retard" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("retard")}
+            >
+              En retard
+            </Button>
+            <Button
+              variant={filtreStatut === "prevu" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("prevu")}
+            >
+              Prévus
+            </Button>
+            <Button
+              variant={filtreStatut === "realise" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("realise")}
+            >
+              Réalisés
+            </Button>
+          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Rechercher par nom, vaccin ou structure..."
+          />
+        </div>
       </div>
 
       {/* Liste des vaccinations */}

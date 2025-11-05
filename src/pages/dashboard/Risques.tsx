@@ -1,20 +1,60 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { mockRisquesIA, mockPatients } from "@/data/mockData";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Eye, FileText } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertTriangle } from "lucide-react";
 import { PatientCard } from "@/components/PatientCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { filterPatientsByUser, filterRisquesByUser } from "@/lib/dataFilters";
+import { DataFilters } from "@/components/DataFilters";
+import { SearchBar } from "@/components/SearchBar";
+import { StatusFilter, StatusOption } from "@/components/StatusFilter";
+import { useState } from "react";
+
+const risqueStatusOptions: StatusOption[] = [
+  { value: "tous", label: "Tous" },
+  { value: "rouge", label: "Rouge" },
+  { value: "orange", label: "Orange" },
+  { value: "vert", label: "Vert" },
+];
 
 export default function Risques() {
   const { user } = useAuth();
-  
+  const [selectedStructure, setSelectedStructure] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [risqueFilter, setRisqueFilter] = useState("tous");
+
   // Filtrer les données selon le rôle de l'utilisateur
-  const userPatients = filterPatientsByUser(mockPatients, user);
-  const userRisques = filterRisquesByUser(mockRisquesIA, mockPatients, user);
+  let userPatients = filterPatientsByUser(mockPatients, user);
+  let userRisques = filterRisquesByUser(mockRisquesIA, mockPatients, user);
+
+  // Filtrage par structure pour responsable district
+  if (user?.role === 'responsable_district' && selectedStructure !== "all") {
+    userPatients = userPatients.filter(p => p.structure === selectedStructure);
+    userRisques = userRisques.filter(r => {
+      const patient = mockPatients.find(p => p.id === r.patient_id);
+      return patient?.structure === selectedStructure;
+    });
+  }
+
+  // Filtrage par niveau de risque
+  let filteredByRisque = userPatients;
+  if (risqueFilter !== "tous") {
+    const risqueIds = userRisques
+      .filter(r => r.niveau === risqueFilter)
+      .map(r => r.patient_id);
+    filteredByRisque = userPatients.filter(p => risqueIds.includes(p.id));
+  }
+
+  // Filtrage par recherche
+  const filteredPatients = searchTerm
+    ? filteredByRisque.filter(
+        (p) =>
+          p.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.telephone.includes(searchTerm) ||
+          p.agent.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : filteredByRisque;
   
   // Calculer les stats basées sur les risques filtrés
   const stats = {
@@ -22,26 +62,16 @@ export default function Risques() {
     orange: userRisques.filter(r => r.niveau === 'orange').length,
     vert: userRisques.filter(r => r.niveau === 'vert').length,
   };
-  
-  const getSemaphoreColor = (niveau: string) => {
-    switch (niveau) {
-      case 'rouge':
-        return 'bg-[hsl(var(--status-rouge))]';
-      case 'orange':
-        return 'bg-[hsl(var(--status-orange))]';
-      case 'vert':
-        return 'bg-[hsl(var(--status-vert))]';
-      default:
-        return 'bg-gray-500';
-    }
-  };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Risques IA - Détection Prédictive</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">Filtrer par niveau</Button>
+          <DataFilters
+            selectedStructure={selectedStructure}
+            onStructureChange={setSelectedStructure}
+          />
           <Button size="sm">Export Audit CSV</Button>
         </div>
       </div>
@@ -89,122 +119,39 @@ export default function Risques() {
         </Card>
       </div>
 
-      {/* Fiches Patientes */}
-      <div>
-        <h3 className="text-xl font-semibold mb-4">Fiches Patientes à Risque</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {userPatients.slice(0, 6).map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
-          ))}
+      {/* Filtres et Recherche */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <StatusFilter
+            options={risqueStatusOptions}
+            selected={risqueFilter}
+            onChange={setRisqueFilter}
+          />
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Rechercher par nom, téléphone ou agent..."
+          />
         </div>
       </div>
 
-      {/* Tableau des risques */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle>Tableau interactif des risques</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Patiente</TableHead>
-                <TableHead>Âge</TableHead>
-                <TableHead>SA</TableHead>
-                <TableHead>Score</TableHead>
-                <TableHead>Sémaphore</TableHead>
-                <TableHead>Facteurs déclenchés</TableHead>
-                <TableHead>Règle IA</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {userRisques.map((risque) => (
-                <TableRow key={risque.id}>
-                  <TableCell className="font-medium">{risque.patient_nom}</TableCell>
-                  <TableCell>{risque.age} ans</TableCell>
-                  <TableCell>{risque.semaines} SA</TableCell>
-                  <TableCell>
-                    <span className="font-bold">{risque.score}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className={`h-4 w-4 rounded-full ${getSemaphoreColor(risque.niveau)}`} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {risque.facteurs.map((facteur, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {facteur}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge>{risque.regle_ia}</Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{risque.date}</TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-3 w-3 mr-1" />
-                          Détails
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Détail du risque - {risque.patient_nom}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold mb-2">Score de risque: {risque.score}/100</h4>
-                            <div className="h-3 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className={getSemaphoreColor(risque.niveau)}
-                                style={{ width: `${risque.score}%`, height: '100%' }}
-                              />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-semibold mb-2">Facteurs de risque</h4>
-                            <ul className="space-y-2">
-                              {risque.facteurs.map((facteur, idx) => (
-                                <li key={idx} className="flex items-start gap-2">
-                                  <AlertTriangle className="h-4 w-4 text-[hsl(var(--status-orange))] mt-0.5" />
-                                  <span className="text-sm">{facteur}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+      {/* Fiches Patientes à Risque */}
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Patientes à Risque</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPatients.map((patient) => (
+            <PatientCard key={patient.id} patient={patient} />
+          ))}
+        </div>
 
-                          {risque.prediction && (
-                            <div className="p-4 bg-[hsl(var(--status-rouge)/0.1)] rounded-lg border border-[hsl(var(--status-rouge)/0.3)]">
-                              <h4 className="font-semibold mb-1 text-[hsl(var(--status-rouge))]">Prédiction IA</h4>
-                              <p className="text-sm">{risque.prediction}</p>
-                            </div>
-                          )}
-
-                          <div>
-                            <h4 className="font-semibold mb-2">Arbre de décision</h4>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              <p>→ Âge &lt; 18 ans: +30 points</p>
-                              <p>→ HTA (150/100): +35 points</p>
-                              <p>→ PB &lt; 21cm: +20 points</p>
-                              <p className="font-semibold text-foreground mt-2">= Score total: {risque.score}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        {filteredPatients.length === 0 && (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Aucune patiente à risque détectée
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

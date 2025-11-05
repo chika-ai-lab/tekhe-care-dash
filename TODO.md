@@ -1,0 +1,1 @@
+- [x] Update stroke colors in Suivi.tsx for CPN1-4

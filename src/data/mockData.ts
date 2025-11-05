@@ -10,6 +10,8 @@ export interface Patient {
   terme_prevu: string;
   semaines: number;
   structure: string;
+  district: string; // District sanitaire
+  region?: string; // Région (pour scalabilité future)
   agent: string;
   statut_csu: 'actif' | 'en_attente' | 'a_renouveler';
   photo_piece?: string;

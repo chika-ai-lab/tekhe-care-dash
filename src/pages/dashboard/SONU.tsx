@@ -6,17 +6,38 @@ import { Clock, MapPin, AlertCircle, CheckCircle, Ambulance, ArrowRight } from "
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { filterReferencesByUser } from "@/lib/dataFilters";
+import { DataFilters } from "@/components/DataFilters";
+import { SearchBar } from "@/components/SearchBar";
 
 export default function SONU() {
   const { user } = useAuth();
   const [filtreStatut, setFiltreStatut] = useState<string>("tous");
-  
-  // Filtrer les références selon le rôle de l'utilisateur
-  const userReferences = filterReferencesByUser(mockReferencesSonu, mockPatients, user);
+  const [selectedStructure, setSelectedStructure] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const references = filtreStatut === "tous" 
-    ? userReferences 
+  // Filtrer les références selon le rôle de l'utilisateur
+  let userReferences = filterReferencesByUser(mockReferencesSonu, mockPatients, user);
+
+  // Filtrage par structure pour responsable district
+  if (user?.role === 'responsable_district' && selectedStructure !== "all") {
+    userReferences = userReferences.filter(r => r.structure_origine === selectedStructure);
+  }
+
+  // Filtrage par statut
+  const filteredByStatus = filtreStatut === "tous"
+    ? userReferences
     : userReferences.filter(r => r.statut === filtreStatut);
+
+  // Filtrage par recherche
+  const references = searchTerm
+    ? filteredByStatus.filter(
+        (r) =>
+          r.patient_nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.type_alerte.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.structure_origine.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.structure_sonu.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : filteredByStatus;
 
   const getStatutBadge = (statut: string) => {
     const variants = {
@@ -47,9 +68,15 @@ export default function SONU() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Références SONU</h1>
-        <p className="text-muted-foreground">Suivi des urgences obstétricales et néonatales</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">Références SONU</h1>
+          <p className="text-muted-foreground">Suivi des urgences obstétricales et néonatales</p>
+        </div>
+        <DataFilters
+          selectedStructure={selectedStructure}
+          onStructureChange={setSelectedStructure}
+        />
       </div>
 
       {/* Stats */}
@@ -99,38 +126,52 @@ export default function SONU() {
         </Card>
       </div>
 
-      {/* Filtres */}
-      <div className="flex gap-2">
-        <Button 
-          variant={filtreStatut === "tous" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("tous")}
-        >
-          Tous
-        </Button>
-        <Button 
-          variant={filtreStatut === "alerte" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("alerte")}
-        >
-          Alertes
-        </Button>
-        <Button 
-          variant={filtreStatut === "en_route" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("en_route")}
-        >
-          En route
-        </Button>
-        <Button 
-          variant={filtreStatut === "admis" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("admis")}
-        >
-          Admis
-        </Button>
-        <Button 
-          variant={filtreStatut === "resolu" ? "default" : "outline"}
-          onClick={() => setFiltreStatut("resolu")}
-        >
-          Résolus
-        </Button>
+      {/* Filtres et Recherche */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={filtreStatut === "tous" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("tous")}
+            >
+              Tous
+            </Button>
+            <Button
+              variant={filtreStatut === "alerte" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("alerte")}
+            >
+              Alertes
+            </Button>
+            <Button
+              variant={filtreStatut === "en_route" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("en_route")}
+            >
+              En route
+            </Button>
+            <Button
+              variant={filtreStatut === "admis" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("admis")}
+            >
+              Admis
+            </Button>
+            <Button
+              variant={filtreStatut === "resolu" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltreStatut("resolu")}
+            >
+              Résolus
+            </Button>
+          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Rechercher par nom, alerte ou structure..."
+          />
+        </div>
       </div>
 
       {/* Liste des références */}

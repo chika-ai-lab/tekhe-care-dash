@@ -7,16 +7,31 @@ import { Badge } from "@/components/ui/badge";
 import { QrCode, Download, Search, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { PatientCard } from "@/components/PatientCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { filterPatientsByUser } from "@/lib/dataFilters";
+import { DataFilters } from "@/components/DataFilters";
+import { StatusFilter, StatusOption } from "@/components/StatusFilter";
+
+const csuStatusOptions: StatusOption[] = [
+  { value: "tous", label: "Tous" },
+  { value: "actif", label: "Actif" },
+  { value: "en_attente", label: "En attente" },
+  { value: "a_renouveler", label: "À renouveler" },
+];
 
 export default function CSU() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [statusFilter, setStatusFilter] = useState("tous");
+  const [selectedStructure, setSelectedStructure] = useState<string>("all");
+
   // Filtrer les patients selon le rôle de l'utilisateur
-  const userPatients = filterPatientsByUser(mockPatients, user);
+  let userPatients = filterPatientsByUser(mockPatients, user);
+
+  // Filtrage par structure pour responsable district
+  if (user?.role === 'responsable_district' && selectedStructure !== "all") {
+    userPatients = userPatients.filter(p => p.structure === selectedStructure);
+  }
 
   const getStatusBadge = (statut: string) => {
     switch (statut) {
@@ -39,11 +54,20 @@ export default function CSU() {
     toast.success("QR Codes batch générés pour les patients sélectionnés");
   };
 
-  const filteredPatients = userPatients.filter(patient =>
-    patient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.telephone.includes(searchTerm)
-  );
+  // Filtrage par status
+  let filteredByStatus = statusFilter === "tous"
+    ? userPatients
+    : userPatients.filter(p => p.statut_csu === statusFilter);
+
+  // Filtrage par recherche
+  const filteredPatients = searchTerm
+    ? filteredByStatus.filter(
+        (p) =>
+          p.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.telephone.includes(searchTerm)
+      )
+    : filteredByStatus;
 
   const stats = {
     actif: userPatients.filter(p => p.statut_csu === 'actif').length,
@@ -106,13 +130,18 @@ export default function CSU() {
         </Card>
       </div>
 
-      {/* Fiches Patientes */}
-      <div>
-        <h3 className="text-xl font-semibold mb-4">Fiches Patientes CSU</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {filteredPatients.slice(0, 6).map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
-          ))}
+      {/* Filtres */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <StatusFilter
+            options={csuStatusOptions}
+            selected={statusFilter}
+            onChange={setStatusFilter}
+          />
+          <DataFilters
+            selectedStructure={selectedStructure}
+            onStructureChange={setSelectedStructure}
+          />
         </div>
       </div>
 

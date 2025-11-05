@@ -22,6 +22,17 @@ import {
 import { Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { DataFilters } from "@/components/DataFilters";
+import { SearchBar } from "@/components/SearchBar";
+import { StatusFilter, StatusOption } from "@/components/StatusFilter";
+import { useState } from "react";
+
+const retardStatusOptions: StatusOption[] = [
+  { value: "tous", label: "Tous" },
+  { value: "modere", label: "Modéré (3-7j)" },
+  { value: "eleve", label: "Élevé (7-14j)" },
+  { value: "critique", label: "Critique (>14j)" },
+];
 
 // Custom Tooltip component for theme adaptation
 interface TooltipProps {
@@ -52,14 +63,51 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 
 export default function Suivi() {
   const { user } = useAuth();
-  
+  const [selectedStructure, setSelectedStructure] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [retardFilter, setRetardFilter] = useState("tous");
+
   // Filtrer les rendez-vous selon le rôle de l'utilisateur
-  const userRdvRetards = user?.role === 'sage_femme'
-    ? mockRdvRetards.filter(rdv => rdv.agent === `${user.prenom} ${user.nom}`)
-    : user?.role === 'responsable_structure' && user.structure
-    ? mockRdvRetards.filter(rdv => rdv.structure === user.structure)
-    : mockRdvRetards;
-  
+  let userRdvRetards =
+    user?.role === "sage_femme"
+      ? mockRdvRetards.filter(
+          (rdv) => rdv.agent === `${user.prenom} ${user.nom}`
+        )
+      : user?.role === "responsable_structure" && user.structure
+      ? mockRdvRetards.filter((rdv) => rdv.structure === user.structure)
+      : mockRdvRetards;
+
+  // Filtrage par structure pour responsable district
+  if (user?.role === "responsable_district" && selectedStructure !== "all") {
+    userRdvRetards = userRdvRetards.filter(
+      (rdv) => rdv.structure === selectedStructure
+    );
+  }
+
+  // Filtrage par niveau de retard
+  let filteredByRetard = userRdvRetards;
+  if (retardFilter === "modere") {
+    filteredByRetard = userRdvRetards.filter(
+      (rdv) => rdv.retard_jours >= 3 && rdv.retard_jours < 7
+    );
+  } else if (retardFilter === "eleve") {
+    filteredByRetard = userRdvRetards.filter(
+      (rdv) => rdv.retard_jours >= 7 && rdv.retard_jours < 14
+    );
+  } else if (retardFilter === "critique") {
+    filteredByRetard = userRdvRetards.filter((rdv) => rdv.retard_jours >= 14);
+  }
+
+  // Filtrage par recherche
+  const filteredRdv = searchTerm
+    ? filteredByRetard.filter(
+        (rdv) =>
+          rdv.patient_nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          rdv.telephone.includes(searchTerm) ||
+          rdv.agent.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : filteredByRetard;
+
   const handleRappelSMS = (telephone: string, nom: string) => {
     toast.success(`Rappel SMS envoyé à ${nom} (${telephone})`);
   };
@@ -69,10 +117,27 @@ export default function Suivi() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Suivi CPN</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            Filtrer par structure
-          </Button>
+          <DataFilters
+            selectedStructure={selectedStructure}
+            onStructureChange={setSelectedStructure}
+          />
           <Button size="sm">Export Excel</Button>
+        </div>
+      </div>
+
+      {/* Filtres et Recherche */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <StatusFilter
+            options={retardStatusOptions}
+            selected={retardFilter}
+            onChange={setRetardFilter}
+          />
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Rechercher par nom, téléphone ou agent..."
+          />
         </div>
       </div>
 
@@ -92,28 +157,28 @@ export default function Suivi() {
               <Line
                 type="monotone"
                 dataKey="cpn1"
-                stroke="hsl(var(--chart-1))"
+                stroke="#3B82F6"
                 strokeWidth={2}
                 name="CPN1"
               />
               <Line
                 type="monotone"
                 dataKey="cpn2"
-                stroke="hsl(var(--chart-2))"
+                stroke="#10B981"
                 strokeWidth={2}
                 name="CPN2"
               />
               <Line
                 type="monotone"
                 dataKey="cpn3"
-                stroke="hsl(var(--chart-3))"
+                stroke="#F59E0B"
                 strokeWidth={2}
                 name="CPN3"
               />
               <Line
                 type="monotone"
                 dataKey="cpn4"
-                stroke="hsl(var(--chart-4))"
+                stroke="#EF4444"
                 strokeWidth={2}
                 name="CPN4"
               />
@@ -141,7 +206,7 @@ export default function Suivi() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {userRdvRetards.map((rdv) => (
+              {filteredRdv.map((rdv) => (
                 <TableRow key={rdv.id}>
                   <TableCell className="font-medium">
                     {rdv.patient_nom}

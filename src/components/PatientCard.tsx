@@ -12,16 +12,16 @@ interface PatientCardProps {
 
 export const PatientCard = ({ patient }: PatientCardProps) => {
   const navigate = useNavigate();
-  
+
   const patientRisk = mockRisquesIA.find(r => r.patient_id === patient.id);
   const isRedRisk = patientRisk?.niveau === 'rouge';
-  
+
   const handleAlertSonu = () => {
     if (isRedRisk) {
       toast.success(`Alerte SONU envoyée pour ${patient.prenom} ${patient.nom}`);
     }
   };
-  
+
   const handleViewDetails = () => {
     navigate(`/dashboard/patient/${patient.id}`);
   };
@@ -39,8 +39,24 @@ export const PatientCard = ({ patient }: PatientCardProps) => {
     }
   };
 
+  // Obtenir la classe de bordure selon le niveau de risque
+  const getBorderColor = () => {
+    if (!patientRisk) return 'border border-muted';
+
+    switch (patientRisk.niveau) {
+      case 'rouge':
+        return 'border border-[hsl(var(--status-rouge))]';
+      case 'orange':
+        return 'border border-[hsl(var(--status-orange))]';
+      case 'vert':
+        return 'border border-[hsl(var(--status-vert))]';
+      default:
+        return 'border border-muted';
+    }
+  };
+
   return (
-    <Card className="shadow-card hover:shadow-lg transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow ${getBorderColor()}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
