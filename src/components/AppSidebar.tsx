@@ -1,4 +1,4 @@
-import { 
+import {
   Home,
   Activity,
   AlertTriangle,
@@ -9,7 +9,7 @@ import {
   LogOut,
   Search,
   Moon,
-  Sun
+  Sun,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   { title: "Accueil KPI", url: "/dashboard", icon: Home },
@@ -64,14 +65,21 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center text-accent-foreground font-bold text-lg">
+        <div
+          className={cn(
+            "flex gap-3",
+            !open ? "justify-center items-center" : "items-center"
+          )}
+        >
+          <div className="h-10 w-10 aspect-square rounded-lg bg-accent flex items-center justify-center text-accent-foreground font-bold text-lg">
             TK
           </div>
           {open && (
             <div className="flex flex-col">
               <span className="font-semibold text-sm">TEKHE</span>
-              <span className="text-xs text-muted-foreground">Santé Maternelle</span>
+              <span className="text-xs text-muted-foreground">
+                Santé Maternelle
+              </span>
             </div>
           )}
         </div>
@@ -91,7 +99,9 @@ export function AppSidebar() {
           </div>
         )}
 
-        <SidebarMenu className="space-y-1">
+        <SidebarMenu
+          className={cn("space-y-1", !open && "justify-center items-center")}
+        >
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
@@ -100,8 +110,8 @@ export function AppSidebar() {
                   className={({ isActive: active }) =>
                     `relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                       active || isActive(item.url)
-                        ? "bg-accent text-accent-foreground font-medium shadow-sm before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:rounded-r-full before:bg-accent"
-                        : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                        ? "bg-primary text-primary-foreground font-medium shadow-sm before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:rounded-r-full before:bg-primary"
+                        : "hover:bg-muted/50 text-muted-foreground"
                     }`
                   }
                 >
@@ -125,7 +135,7 @@ export function AppSidebar() {
               {open && <span className="text-sm">Déconnexion</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
-          
+
           <SidebarMenuItem>
             <div className="flex items-center gap-3 px-3 py-2.5">
               {darkMode ? (
@@ -138,10 +148,7 @@ export function AppSidebar() {
                   <span className="text-sm text-muted-foreground flex-1">
                     {darkMode ? "Mode sombre" : "Mode clair"}
                   </span>
-                  <Switch
-                    checked={darkMode}
-                    onCheckedChange={toggleDarkMode}
-                  />
+                  <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
                 </>
               )}
             </div>

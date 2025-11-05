@@ -1,10 +1,53 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { mockCPNMonthly, mockRdvRetards } from "@/data/mockData";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
+
+// Custom Tooltip component for theme adaptation
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    color: string;
+    name: string;
+    value: number;
+  }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-gray-900 text-black dark:text-white p-2 border rounded shadow-lg">
+        <p className="font-medium">{`Mois: ${label}`}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color }}>
+            {`${entry.name}: ${entry.value}`}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function Suivi() {
   const handleRappelSMS = (telephone: string, nom: string) => {
@@ -16,7 +59,9 @@ export default function Suivi() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Suivi CPN</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">Filtrer par structure</Button>
+          <Button variant="outline" size="sm">
+            Filtrer par structure
+          </Button>
           <Button size="sm">Export Excel</Button>
         </div>
       </div>
@@ -32,12 +77,36 @@ export default function Suivi() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="mois" />
               <YAxis />
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Line type="monotone" dataKey="cpn1" stroke="hsl(var(--chart-1))" strokeWidth={2} name="CPN1" />
-              <Line type="monotone" dataKey="cpn2" stroke="hsl(var(--chart-2))" strokeWidth={2} name="CPN2" />
-              <Line type="monotone" dataKey="cpn3" stroke="hsl(var(--chart-3))" strokeWidth={2} name="CPN3" />
-              <Line type="monotone" dataKey="cpn4" stroke="hsl(var(--chart-4))" strokeWidth={2} name="CPN4" />
+              <Line
+                type="monotone"
+                dataKey="cpn1"
+                stroke="hsl(var(--chart-1))"
+                strokeWidth={2}
+                name="CPN1"
+              />
+              <Line
+                type="monotone"
+                dataKey="cpn2"
+                stroke="hsl(var(--chart-2))"
+                strokeWidth={2}
+                name="CPN2"
+              />
+              <Line
+                type="monotone"
+                dataKey="cpn3"
+                stroke="hsl(var(--chart-3))"
+                strokeWidth={2}
+                name="CPN3"
+              />
+              <Line
+                type="monotone"
+                dataKey="cpn4"
+                stroke="hsl(var(--chart-4))"
+                strokeWidth={2}
+                name="CPN4"
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -64,7 +133,9 @@ export default function Suivi() {
             <TableBody>
               {mockRdvRetards.map((rdv) => (
                 <TableRow key={rdv.id}>
-                  <TableCell className="font-medium">{rdv.patient_nom}</TableCell>
+                  <TableCell className="font-medium">
+                    {rdv.patient_nom}
+                  </TableCell>
                   <TableCell>{rdv.age} ans</TableCell>
                   <TableCell>{rdv.semaines} SA</TableCell>
                   <TableCell>
@@ -73,13 +144,17 @@ export default function Suivi() {
                     </span>
                   </TableCell>
                   <TableCell>{rdv.agent}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{rdv.structure}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {rdv.structure}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleRappelSMS(rdv.telephone, rdv.patient_nom)}
+                        onClick={() =>
+                          handleRappelSMS(rdv.telephone, rdv.patient_nom)
+                        }
                       >
                         <Phone className="h-3 w-3 mr-1" />
                         SMS
