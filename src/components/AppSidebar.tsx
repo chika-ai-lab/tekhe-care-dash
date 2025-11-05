@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/data/mockData";
+import { cn } from "@/lib/utils";
 
 interface MenuItem {
   title: string;
