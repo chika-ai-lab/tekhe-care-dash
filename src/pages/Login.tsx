@@ -1,23 +1,59 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { mockUsers } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { Phone } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [foundUser, setFoundUser] = useState<typeof mockUsers[0] | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handlePhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const user = mockUsers.find(u => u.id === selectedUserId);
+    
+    // Nettoyer le numéro de téléphone
+    const cleanPhone = phoneNumber.trim();
+    
+    // Trouver l'utilisateur par numéro de téléphone
+    const user = mockUsers.find(u => u.telephone === cleanPhone);
+    
     if (user) {
-      login(user);
-      navigate("/dashboard");
+      setFoundUser(user);
+      setStep('otp');
+      toast.success(`Code OTP envoyé au ${cleanPhone}`);
+      toast.info("Code OTP de test : 123456");
+    } else {
+      toast.error("Numéro de téléphone non trouvé");
     }
+  };
+
+  const handleOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Vérifier le code OTP (simulé)
+    if (otp === "123456") {
+      if (foundUser) {
+        login(foundUser);
+        toast.success(`Bienvenue ${foundUser.prenom} ${foundUser.nom} !`);
+        navigate("/dashboard");
+      }
+    } else {
+      toast.error("Code OTP incorrect");
+    }
+  };
+
+  const handleBack = () => {
+    setStep('phone');
+    setOtp("");
+    setFoundUser(null);
   };
 
   const getRoleLabel = (role: string) => {
@@ -44,26 +80,88 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Sélectionner un utilisateur</label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choisir un profil..." />
-                </SelectTrigger>
-                <SelectContent>
+          {step === 'phone' ? (
+            <form onSubmit={handlePhoneSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Numéro de téléphone</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="tel"
+                    placeholder="+221701234567"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Format: +221XXXXXXXXX
+                </p>
+              </div>
+              
+              <Button type="submit" className="w-full">
+                Envoyer le code OTP
+              </Button>
+
+              {/* Liste des numéros de test */}
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <p className="text-xs font-semibold mb-2">Numéros de test :</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
                   {mockUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.prenom} {user.nom} - {getRoleLabel(user.role)}
-                    </SelectItem>
+                    <div key={user.id} className="flex justify-between">
+                      <span>{user.prenom} {user.nom}</span>
+                      <span className="font-mono">{user.telephone}</span>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full" disabled={!selectedUserId}>
-              Se connecter
-            </Button>
-          </form>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Code OTP de test : <span className="font-mono font-bold">123456</span>
+                </p>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleOtpSubmit} className="space-y-6">
+              {foundUser && (
+                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                  <p className="text-sm font-medium">
+                    {foundUser.prenom} {foundUser.nom}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {getRoleLabel(foundUser.role)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {foundUser.telephone}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Code OTP</label>
+                <Input
+                  type="text"
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="text-center text-2xl tracking-widest font-mono"
+                  maxLength={6}
+                  required
+                />
+                <p className="text-xs text-muted-foreground text-center">
+                  Entrez le code à 6 chiffres envoyé par SMS
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={handleBack} className="flex-1">
+                  Retour
+                </Button>
+                <Button type="submit" className="flex-1" disabled={otp.length !== 6}>
+                  Se connecter
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

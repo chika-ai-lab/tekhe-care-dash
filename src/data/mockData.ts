@@ -458,6 +458,7 @@ export interface User {
   nom: string;
   prenom: string;
   email: string;
+  telephone: string;
   role: UserRole;
   structure?: string;
   district?: string;
@@ -470,6 +471,7 @@ export const mockUsers: User[] = [
     nom: "Sall",
     prenom: "Aminata",
     email: "aminata.sall@sante.sn",
+    telephone: "+221701234567",
     role: "sage_femme",
     structure: "Poste de Santé Dakar Nord"
   },
@@ -478,6 +480,7 @@ export const mockUsers: User[] = [
     nom: "Diop",
     prenom: "Mariama",
     email: "mariama.diop@sante.sn",
+    telephone: "+221702345678",
     role: "responsable_structure",
     structure: "Centre de Santé Pikine"
   },
@@ -486,6 +489,7 @@ export const mockUsers: User[] = [
     nom: "Kane",
     prenom: "Ousmane",
     email: "ousmane.kane@sante.sn",
+    telephone: "+221703456789",
     role: "responsable_district",
     district: "District Dakar"
   },
@@ -494,6 +498,7 @@ export const mockUsers: User[] = [
     nom: "Ndiaye",
     prenom: "Fatou",
     email: "fatou.ndiaye@ong.org",
+    telephone: "+221704567890",
     role: "partenaire_ong",
     region: "Dakar"
   },
@@ -502,6 +507,7 @@ export const mockUsers: User[] = [
     nom: "Mbaye",
     prenom: "Ibrahima",
     email: "ibrahima.mbaye@msante.gouv.sn",
+    telephone: "+221705678901",
     role: "partenaire_regional",
     region: "Dakar"
   },
@@ -510,6 +516,7 @@ export const mockUsers: User[] = [
     nom: "Sy",
     prenom: "Aissatou",
     email: "aissatou.sy@msante.gouv.sn",
+    telephone: "+221706789012",
     role: "partenaire_gouvernemental"
   }
 ];
