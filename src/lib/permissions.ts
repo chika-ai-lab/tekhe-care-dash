@@ -18,6 +18,7 @@ export enum Resource {
   ANALYTICS = "analytics",
   STRUCTURE = "structure",
   PERSONNEL = "personnel",
+  AGENT = "agent",
 }
 
 // Actions possibles sur les ressources
