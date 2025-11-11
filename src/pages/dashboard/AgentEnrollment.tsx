@@ -466,6 +466,207 @@ export default function AgentEnrollment() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Détails Agent Modal */}
+      <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Détails Agent - {selectedAgent?.prenom} {selectedAgent?.nom}
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedAgent && (
+            <div className="space-y-6">
+              {/* Informations Personnelles */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">
+                  Informations Personnelles
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-600">Nom</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.nom}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">Prénom</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.prenom}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-600">Téléphone</p>
+                    <p className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-slate-400" />
+                      {selectedAgent.telephone}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations Professionnelles */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">
+                  Informations Professionnelles
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-600">Type d'Agent</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.type === "sage_femme"
+                        ? "Sage-femme"
+                        : "Agent de Santé"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">Structure</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.structure}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">District</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.district}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">Région</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.region || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations d'Enrôlement */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">
+                  Statut d'Enrôlement
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-600">Statut</p>
+                    <p className="text-sm font-medium mt-1">
+                      <span
+                        className={`inline-block px-2 py-1 rounded font-medium text-xs ${
+                          selectedAgent.statut === "actif"
+                            ? "bg-green-100 text-green-700"
+                            : selectedAgent.statut === "enroule"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {selectedAgent.statut === "actif"
+                          ? "Actif"
+                          : selectedAgent.statut === "enroule"
+                            ? "Enrôlé"
+                            : "En attente"}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">Code d'Enrôlement</p>
+                    <p className="text-sm font-mono font-medium text-slate-900 mt-1">
+                      {selectedAgent.code_enrolement}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">Date d'Enrôlement</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.date_enrolement}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">Compte Créé</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.compte_cree ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4" />
+                          Oui
+                        </span>
+                      ) : (
+                        <span className="text-orange-600">Non</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations SMS */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">
+                  Envoi SMS
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-600">SMS Envoyé</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.sms_envoye ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4" />
+                          Oui
+                        </span>
+                      ) : (
+                        <span className="text-orange-600">Non</span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600">Date d'Envoi</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedAgent.date_sms_envoye || "N/A"}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-600">Lien de Téléchargement</p>
+                    <p className="text-sm font-mono bg-slate-100 p-2 rounded mt-1 break-all">
+                      {selectedAgent.lien_telecharger}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Boutons d'Action */}
+              <div className="flex gap-2 justify-end pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                  }}
+                >
+                  Fermer
+                </Button>
+                {selectedAgent.sms_envoye ? (
+                  <Button
+                    onClick={() => {
+                      handleResendSMS(selectedAgent);
+                      setShowDetailModal(false);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Renvoyer SMS
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      handleResendSMS(selectedAgent);
+                      setShowDetailModal(false);
+                    }}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Envoyer SMS
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
