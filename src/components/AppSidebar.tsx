@@ -10,6 +10,7 @@ import {
   Search,
   Moon,
   Sun,
+  Users,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -104,6 +105,12 @@ const menuItems: MenuItem[] = [
     url: "/dashboard/dhis2",
     icon: Database,
     allowedRoles: ["responsable_district"],
+  },
+  {
+    title: "Gestion Agents",
+    url: "/dashboard/agents",
+    icon: Users,
+    allowedRoles: ["responsable_structure", "responsable_district"],
   },
   // Menu pour Partenaires - Données anonymisées uniquement
   {

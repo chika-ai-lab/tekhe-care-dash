@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { mockUsers } from "@/data/mockData";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 import { Phone } from "lucide-react";
 import { countries, phoneNormalizer, isValidSenegalPhone } from "@/lib/phoneHelpers";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const login = useAuthStore((state) => state.login);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [selectedCountry, setSelectedCountry] = useState("SN");
   const [phoneNumber, setPhoneNumber] = useState("");
