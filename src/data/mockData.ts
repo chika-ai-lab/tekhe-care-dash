@@ -110,6 +110,25 @@ export interface VaccinData {
   structure: string;
 }
 
+export interface HealthAgent {
+  id: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  type: "sage_femme" | "agent_sante"; // Type d'agent
+  structure: string;
+  district: string;
+  region?: string;
+  statut: "enroule" | "en_attente" | "actif"; // Statut d'enrôlement
+  date_enrolement: string;
+  code_enrolement: string; // Code unique pour créer le compte
+  lien_telecharger?: string; // Lien pour télécharger l'app mobile
+  sms_envoye: boolean;
+  date_sms_envoye?: string;
+  compte_cree: boolean; // Compte créé via mobile?
+  date_activation?: string;
+}
+
 // Générateur de noms sénégalais
 const noms = ["Diop", "Ndiaye", "Sow", "Fall", "Mbaye", "Gueye", "Cissé", "Thiam", "Sy", "Ba", "Diallo", "Sarr", "Faye", "Diouf", "Kane", "Niang", "Seck", "Ndao", "Touré", "Dème"];
 const prenoms = ["Fatou", "Aissatou", "Mariama", "Awa", "Khadija", "Mame", "Ami", "Seynabou", "Binta", "Ndèye", "Khady", "Aminata", "Rokhaya", "Coumba", "Astou", "Dieynaba", "Maimouna", "Yacine", "Fatoumata", "Adama"];
