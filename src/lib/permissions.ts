@@ -95,6 +95,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, { permissions: Permission[]; sco
       "personnel:read", // Peut voir le personnel de sa structure
       "structure:read",
       "analytics:read",
+      "agent:create", // Enrôler des agents de santé
+      "agent:read", // Voir les agents de sa structure
+      "agent:update", // Modifier les agents
     ],
     scope: PermissionScope.STRUCTURE, // Voit toute sa structure
   },
