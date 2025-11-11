@@ -136,6 +136,11 @@ export default function AgentEnrollment() {
     }
   };
 
+  const handleViewAgentDetail = (agent: HealthAgent) => {
+    setSelectedAgent(agent);
+    setShowDetailModal(true);
+  };
+
   const handleResendSMS = (agent: HealthAgent) => {
     try {
       sendEnrollmentSMS(agent);
