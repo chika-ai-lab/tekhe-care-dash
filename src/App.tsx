@@ -15,6 +15,7 @@ import PEV from "./pages/dashboard/PEV";
 import DHIS2 from "./pages/dashboard/DHIS2";
 import PatientDetail from "./pages/dashboard/PatientDetail";
 import PartenaireAnalytics from "./pages/dashboard/PartenaireAnalytics";
+import AgentEnrollment from "./pages/dashboard/AgentEnrollment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
