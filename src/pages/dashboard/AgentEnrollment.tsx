@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Phone,
   Plus,
+  Eye,
 } from "lucide-react";
 import { addAuditLog } from "@/lib/auditLog";
 import { Action } from "@/lib/permissions";
