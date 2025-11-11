@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
 import { UserRole } from "@/data/mockData";
 
 interface ProtectedRouteProps {
@@ -8,7 +8,8 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { user, hasRole } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const hasRole = useAuthStore((state) => state.hasRole);
 
   if (!user) {
     return <Navigate to="/login" replace />;

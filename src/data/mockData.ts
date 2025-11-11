@@ -110,6 +110,25 @@ export interface VaccinData {
   structure: string;
 }
 
+export interface HealthAgent {
+  id: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  type: "sage_femme" | "agent_sante"; // Type d'agent
+  structure: string;
+  district: string;
+  region?: string;
+  statut: "enroule" | "en_attente" | "actif"; // Statut d'enrôlement
+  date_enrolement: string;
+  code_enrolement: string; // Code unique pour créer le compte
+  lien_telecharger?: string; // Lien pour télécharger l'app mobile
+  sms_envoye: boolean;
+  date_sms_envoye?: string;
+  compte_cree: boolean; // Compte créé via mobile?
+  date_activation?: string;
+}
+
 // Générateur de noms sénégalais
 const noms = ["Diop", "Ndiaye", "Sow", "Fall", "Mbaye", "Gueye", "Cissé", "Thiam", "Sy", "Ba", "Diallo", "Sarr", "Faye", "Diouf", "Kane", "Niang", "Seck", "Ndao", "Touré", "Dème"];
 const prenoms = ["Fatou", "Aissatou", "Mariama", "Awa", "Khadija", "Mame", "Ami", "Seynabou", "Binta", "Ndèye", "Khady", "Aminata", "Rokhaya", "Coumba", "Astou", "Dieynaba", "Maimouna", "Yacine", "Fatoumata", "Adama"];
@@ -831,5 +850,94 @@ export const mockCouvertureGeo = [
     cible_cpn1: 55,
     couverture: 87.3,
     cpn4: 42,
+  },
+];
+
+// Agents de santé et sage-femmes
+export const mockHealthAgents: HealthAgent[] = [
+  {
+    id: "HA001",
+    nom: "Faye",
+    prenom: "Khady",
+    telephone: "+221771234500",
+    type: "sage_femme",
+    structure: "Centre de Santé Pikine",
+    district: "Pikine",
+    region: "Dakar",
+    statut: "actif",
+    date_enrolement: generateDate(30),
+    code_enrolement: "SF2025001",
+    lien_telecharger: "https://app.tekhe.sn/download/HA001",
+    sms_envoye: true,
+    date_sms_envoye: generateDate(30),
+    compte_cree: true,
+    date_activation: generateDate(28),
+  },
+  {
+    id: "HA002",
+    nom: "Diallo",
+    prenom: "Bineta",
+    telephone: "+221772345600",
+    type: "sage_femme",
+    structure: "Poste de Santé Dakar Nord",
+    district: "Dakar Nord",
+    region: "Dakar",
+    statut: "actif",
+    date_enrolement: generateDate(25),
+    code_enrolement: "SF2025002",
+    lien_telecharger: "https://app.tekhe.sn/download/HA002",
+    sms_envoye: true,
+    date_sms_envoye: generateDate(25),
+    compte_cree: true,
+    date_activation: generateDate(23),
+  },
+  {
+    id: "HA003",
+    nom: "Sarr",
+    prenom: "Fatou",
+    telephone: "+221773456700",
+    type: "sage_femme",
+    structure: "Hôpital Rufisque",
+    district: "Rufisque",
+    region: "Dakar",
+    statut: "enroule",
+    date_enrolement: generateDate(5),
+    code_enrolement: "SF2025003",
+    lien_telecharger: "https://app.tekhe.sn/download/HA003",
+    sms_envoye: true,
+    date_sms_envoye: generateDate(5),
+    compte_cree: false,
+  },
+  {
+    id: "HA004",
+    nom: "Ba",
+    prenom: "Aissatou",
+    telephone: "+221774567800",
+    type: "agent_sante",
+    structure: "Centre de Santé Thiaroye",
+    district: "Dakar Sud",
+    region: "Dakar",
+    statut: "enroule",
+    date_enrolement: generateDate(2),
+    code_enrolement: "AS2025001",
+    lien_telecharger: "https://app.tekhe.sn/download/HA004",
+    sms_envoye: true,
+    date_sms_envoye: generateDate(2),
+    compte_cree: false,
+  },
+  {
+    id: "HA005",
+    nom: "Ndiaye",
+    prenom: "Awa",
+    telephone: "+221775678900",
+    type: "agent_sante",
+    structure: "Poste de Santé Guédiawaye",
+    district: "Guédiawaye",
+    region: "Dakar",
+    statut: "en_attente",
+    date_enrolement: generateDate(0),
+    code_enrolement: "AS2025002",
+    lien_telecharger: "https://app.tekhe.sn/download/HA005",
+    sms_envoye: false,
   },
 ];

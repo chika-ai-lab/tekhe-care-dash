@@ -15,7 +15,9 @@ import PEV from "./pages/dashboard/PEV";
 import DHIS2 from "./pages/dashboard/DHIS2";
 import PatientDetail from "./pages/dashboard/PatientDetail";
 import PartenaireAnalytics from "./pages/dashboard/PartenaireAnalytics";
+import AgentEnrollment from "./pages/dashboard/AgentEnrollment";
 import NotFound from "./pages/NotFound";
+import { StoreProvider } from "./providers/StoreProvider";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +26,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <StoreProvider>
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
@@ -92,7 +95,14 @@ const App = () => (
                 <DHIS2 />
               </ProtectedRoute>
             } />
-            
+
+            {/* Enrôlement Agents - Responsable Structure et District */}
+            <Route path="agents" element={
+              <ProtectedRoute allowedRoles={['responsable_structure', 'responsable_district']}>
+                <AgentEnrollment />
+              </ProtectedRoute>
+            } />
+
             {/* Détail Patient - Sage-femme et Responsables */}
             <Route path="patient/:patientId" element={
               <ProtectedRoute allowedRoles={['sage_femme', 'responsable_structure', 'responsable_district']}>
@@ -104,7 +114,8 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </StoreProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

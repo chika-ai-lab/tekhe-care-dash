@@ -18,6 +18,7 @@ export enum Resource {
   ANALYTICS = "analytics",
   STRUCTURE = "structure",
   PERSONNEL = "personnel",
+  AGENT = "agent",
 }
 
 // Actions possibles sur les ressources
@@ -94,6 +95,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, { permissions: Permission[]; sco
       "personnel:read", // Peut voir le personnel de sa structure
       "structure:read",
       "analytics:read",
+      "agent:create", // Enrôler des agents de santé
+      "agent:read", // Voir les agents de sa structure
+      "agent:update", // Modifier les agents
     ],
     scope: PermissionScope.STRUCTURE, // Voit toute sa structure
   },
@@ -130,6 +134,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, { permissions: Permission[]; sco
       "dhis2:export",
       "analytics:read",
       "analytics:export",
+      "agent:create",
+      "agent:read",
+      "agent:update",
+      "agent:delete",
     ],
     scope: PermissionScope.DISTRICT, // Voit tout son district
   },
@@ -319,4 +327,10 @@ export const Permissions = {
   // Structure
   STRUCTURE_READ: "structure:read" as Permission,
   STRUCTURE_UPDATE: "structure:update" as Permission,
+
+  // Agent
+  AGENT_CREATE: "agent:create" as Permission,
+  AGENT_READ: "agent:read" as Permission,
+  AGENT_UPDATE: "agent:update" as Permission,
+  AGENT_DELETE: "agent:delete" as Permission,
 };
