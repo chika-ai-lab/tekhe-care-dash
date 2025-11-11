@@ -17,6 +17,7 @@ import PatientDetail from "./pages/dashboard/PatientDetail";
 import PartenaireAnalytics from "./pages/dashboard/PartenaireAnalytics";
 import AgentEnrollment from "./pages/dashboard/AgentEnrollment";
 import NotFound from "./pages/NotFound";
+import { StoreProvider } from "./providers/StoreProvider";
 
 const queryClient = new QueryClient();
 
