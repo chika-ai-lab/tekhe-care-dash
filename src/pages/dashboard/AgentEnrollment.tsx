@@ -36,6 +36,7 @@ export default function AgentEnrollment() {
   const { can } = usePermissions();
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [showSMSHistory, setShowSMSHistory] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<HealthAgent | null>(null);
   const [smsHistory, setSmsHistory] = useState<SMSRecord[]>([]);
 
