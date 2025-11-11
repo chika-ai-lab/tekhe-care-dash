@@ -93,7 +93,14 @@ const App = () => (
                 <DHIS2 />
               </ProtectedRoute>
             } />
-            
+
+            {/* Enrôlement Agents - Responsable Structure et District */}
+            <Route path="agents" element={
+              <ProtectedRoute allowedRoles={['responsable_structure', 'responsable_district']}>
+                <AgentEnrollment />
+              </ProtectedRoute>
+            } />
+
             {/* Détail Patient - Sage-femme et Responsables */}
             <Route path="patient/:patientId" element={
               <ProtectedRoute allowedRoles={['sage_femme', 'responsable_structure', 'responsable_district']}>
