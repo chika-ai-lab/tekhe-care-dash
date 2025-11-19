@@ -4,13 +4,30 @@ import { HealthAgent } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Resource } from "@/lib/permissions";
 import { CreateGuard } from "@/components/PermissionGuard";
 import { toast } from "sonner";
-import { sendEnrollmentSMS, getSMSHistoryForAgent, SMSRecord } from "@/lib/smsSimulation";
+import {
+  sendEnrollmentSMS,
+  getSMSHistoryForAgent,
+  SMSRecord,
+} from "@/lib/smsSimulation";
 import { useAgents } from "@/hooks/useAgents";
 import {
   Table,
@@ -28,19 +45,35 @@ import {
   Phone,
   Plus,
   Eye,
+  Filter,
+  Search,
 } from "lucide-react";
 import { addAuditLog } from "@/lib/auditLog";
 import { Action } from "@/lib/permissions";
+import { DataFilters } from "@/components/DataFilters";
+import { SearchBar } from "@/components/SearchBar";
+import { StatusFilter, StatusOption } from "@/components/StatusFilter";
 
 export default function AgentEnrollment() {
   const { user } = useAuth();
-  const { can } = usePermissions();
+  const { canCreate } = usePermissions();
   const { agents, addAgent, loading } = useAgents();
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [showSMSHistory, setShowSMSHistory] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<HealthAgent | null>(null);
   const [smsHistory, setSmsHistory] = useState<SMSRecord[]>([]);
+  const [selectedStructure, setSelectedStructure] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("tous");
+
+  // État du formulaire
+  const [formData, setFormData] = useState({
+    nom: "",
+    prenom: "",
+    telephone: "",
+    type: "sage_femme" as "sage_femme" | "agent_sante",
+  });
 
   // Générer code d'enrôlement unique
   const generateEnrollmentCode = (): string => {
@@ -51,7 +84,7 @@ export default function AgentEnrollment() {
   };
 
   // Filtrer les agents selon le rôle et la structure/district
-  const filteredAgents = agents.filter((agent) => {
+  let filteredAgents = agents.filter((agent) => {
     if (user?.role === "responsable_structure") {
       return agent.structure === user.structure;
     } else if (user?.role === "responsable_district") {
@@ -60,13 +93,39 @@ export default function AgentEnrollment() {
     return false;
   });
 
-  // État du formulaire
-  const [formData, setFormData] = useState({
-    nom: "",
-    prenom: "",
-    telephone: "",
-    type: "sage_femme" as "sage_femme" | "agent_sante",
-  });
+  // Filtrage par structure pour responsable district
+  if (user?.role === "responsable_district" && selectedStructure !== "all") {
+    filteredAgents = filteredAgents.filter(
+      (agent) => agent.structure === selectedStructure
+    );
+  }
+
+  // Filtrage par statut
+  let filteredByStatus = filteredAgents;
+  if (statusFilter === "actif") {
+    filteredByStatus = filteredAgents.filter(
+      (agent) => agent.statut === "actif"
+    );
+  } else if (statusFilter === "enroule") {
+    filteredByStatus = filteredAgents.filter(
+      (agent) => agent.statut === "enroule"
+    );
+  } else if (statusFilter === "en_attente") {
+    filteredByStatus = filteredAgents.filter(
+      (agent) => agent.statut === "en_attente"
+    );
+  }
+
+  // Filtrage par recherche
+  const finalFilteredAgents = searchTerm
+    ? filteredByStatus.filter(
+        (agent) =>
+          agent.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          agent.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          agent.telephone.includes(searchTerm) ||
+          agent.code_enrolement.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : filteredByStatus;
 
   const handleEnrollNewAgent = () => {
     if (!formData.nom || !formData.prenom || !formData.telephone) {
@@ -100,18 +159,21 @@ export default function AgentEnrollment() {
       code_enrolement: code,
       lien_telecharger: `https://app.tekhe.sn/download/${code}`,
       sms_envoye: false,
+      compte_cree: false,
     };
 
     // Envoyer SMS
     try {
       sendEnrollmentSMS(newAgent);
-      toast.success(`Agent enrôlé avec succès. SMS envoyé �� ${formData.telephone}`);
+      toast.success(
+        `Agent enrôlé avec succès. SMS envoyé �� ${formData.telephone}`
+      );
 
       // Log audit
       addAuditLog(
         user!,
         "create" as Action,
-        "agent" as any,
+        Resource.AGENT,
         newAgent.id,
         {
           agent_nom: `${newAgent.prenom} ${newAgent.nom}`,
@@ -151,7 +213,7 @@ export default function AgentEnrollment() {
       addAuditLog(
         user!,
         "update" as Action,
-        "agent" as any,
+        Resource.AGENT,
         agent.id,
         { action: "sms_resend", telephone: agent.telephone },
         true
@@ -182,8 +244,10 @@ export default function AgentEnrollment() {
     <div className="space-y-6 p-6">
       {/* Titre et Description */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-slate-900">Gestion Agents de Santé</h1>
-        <p className="text-slate-600">
+        <h1 className="text-3xl font-bold text-foreground">
+          Gestion Agents de Santé
+        </h1>
+        <p className="text-muted-foreground">
           Enrôlez et gérez les agents de santé et sage-femmes de votre structure
         </p>
       </div>
@@ -198,7 +262,10 @@ export default function AgentEnrollment() {
           <CardContent>
             <div className="text-2xl font-bold">{filteredAgents.length}</div>
             <p className="text-xs text-slate-600 mt-1">
-              Agents dans votre {user?.role === "responsable_structure" ? "structure" : "district"}
+              Agents dans votre{" "}
+              {user?.role === "responsable_structure"
+                ? "structure"
+                : "district"}
             </p>
           </CardContent>
         </Card>
@@ -234,11 +301,34 @@ export default function AgentEnrollment() {
         </Card>
       </div>
 
-      {/* Bouton Enrôler */}
-      <CreateGuard resource={Resource.AGENT}>
+      {/* Filtres */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 flex-1">
+          <SearchBar
+            placeholder="Rechercher par nom, prénom, téléphone ou code..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
+          <StatusFilter
+            selected={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: "tous", label: "Tous les statuts" },
+              { value: "actif", label: "Actif" },
+              { value: "enroule", label: "Enrôlé" },
+              { value: "en_attente", label: "En attente" },
+            ]}
+          />
+        </div>
         <Dialog open={showEnrollDialog} onOpenChange={setShowEnrollDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={
+                user?.role !== "responsable_structure" ||
+                !canCreate(Resource.AGENT)
+              }
+            >
               <Plus className="mr-2 h-4 w-4" />
               Enrôler un Agent
             </Button>
@@ -247,7 +337,8 @@ export default function AgentEnrollment() {
             <DialogHeader>
               <DialogTitle>Enrôler un Nouvel Agent</DialogTitle>
               <DialogDescription>
-                Complétez les informations pour enrôler un agent. Un SMS de bienvenue sera automatiquement envoyé.
+                Complétez les informations pour enrôler un agent. Un SMS de
+                bienvenue sera automatiquement envoyé.
               </DialogDescription>
             </DialogHeader>
 
@@ -318,7 +409,7 @@ export default function AgentEnrollment() {
             </div>
           </DialogContent>
         </Dialog>
-      </CreateGuard>
+      </div>
 
       {/* Tableau des Agents */}
       <Card>
@@ -353,7 +444,9 @@ export default function AgentEnrollment() {
                       </TableCell>
                       <TableCell>
                         <span className="text-xs bg-slate-100 px-2 py-1 rounded">
-                          {agent.type === "sage_femme" ? "Sage-femme" : "Agent Santé"}
+                          {agent.type === "sage_femme"
+                            ? "Sage-femme"
+                            : "Agent Santé"}
                         </span>
                       </TableCell>
                       <TableCell className="flex items-center gap-2">
@@ -369,15 +462,15 @@ export default function AgentEnrollment() {
                             agent.statut === "actif"
                               ? "bg-green-100 text-green-700"
                               : agent.statut === "enroule"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-yellow-100 text-yellow-700"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-yellow-100 text-yellow-700"
                           }`}
                         >
                           {agent.statut === "actif"
                             ? "Actif"
                             : agent.statut === "enroule"
-                              ? "Enrôlé"
-                              : "En attente"}
+                            ? "Enrôlé"
+                            : "En attente"}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -387,7 +480,9 @@ export default function AgentEnrollment() {
                             {agent.date_sms_envoye}
                           </span>
                         ) : (
-                          <span className="text-xs text-orange-600">Non envoyé</span>
+                          <span className="text-xs text-orange-600">
+                            Non envoyé
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -447,7 +542,8 @@ export default function AgentEnrollment() {
                           {new Date(sms.date_envoi).toLocaleDateString("fr-FR")}
                         </p>
                         <p className="text-xs text-slate-500">
-                          Statut: <span className="font-medium">{sms.statut}</span>
+                          Statut:{" "}
+                          <span className="font-medium">{sms.statut}</span>
                         </p>
                       </div>
                       <Button
@@ -557,15 +653,15 @@ export default function AgentEnrollment() {
                           selectedAgent.statut === "actif"
                             ? "bg-green-100 text-green-700"
                             : selectedAgent.statut === "enroule"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-yellow-100 text-yellow-700"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-yellow-100 text-yellow-700"
                         }`}
                       >
                         {selectedAgent.statut === "actif"
                           ? "Actif"
                           : selectedAgent.statut === "enroule"
-                            ? "Enrôlé"
-                            : "En attente"}
+                          ? "Enrôlé"
+                          : "En attente"}
                       </span>
                     </p>
                   </div>
@@ -623,7 +719,9 @@ export default function AgentEnrollment() {
                     </p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs text-slate-600">Lien de Téléchargement</p>
+                    <p className="text-xs text-slate-600">
+                      Lien de Téléchargement
+                    </p>
                     <p className="text-sm font-mono bg-slate-100 p-2 rounded mt-1 break-all">
                       {selectedAgent.lien_telecharger}
                     </p>

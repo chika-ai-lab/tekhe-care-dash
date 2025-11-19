@@ -45,7 +45,10 @@ export enum PermissionScope {
 }
 
 // Configuration des permissions par rôle
-export const ROLE_PERMISSIONS: Record<UserRole, { permissions: Permission[]; scope: PermissionScope }> = {
+export const ROLE_PERMISSIONS: Record<
+  UserRole,
+  { permissions: Permission[]; scope: PermissionScope }
+> = {
   sage_femme: {
     permissions: [
       "patient:create",
@@ -134,7 +137,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, { permissions: Permission[]; sco
       "dhis2:export",
       "analytics:read",
       "analytics:export",
-      "agent:create",
       "agent:read",
       "agent:update",
       "agent:delete",
@@ -150,10 +152,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, { permissions: Permission[]; sco
   },
 
   partenaire_regional: {
-    permissions: [
-      "analytics:read",
-      "analytics:export",
-    ],
+    permissions: ["analytics:read", "analytics:export"],
     scope: PermissionScope.ANONYMOUS,
   },
 
@@ -215,9 +214,14 @@ export function isSensitiveAction(permission: Permission): boolean {
 /**
  * Récupère les actions disponibles pour un rôle sur une ressource
  */
-export function getAvailableActions(role: UserRole, resource: Resource): Action[] {
+export function getAvailableActions(
+  role: UserRole,
+  resource: Resource
+): Action[] {
   const permissions = getRolePermissions(role);
-  const resourcePermissions = permissions.filter((p) => p.startsWith(`${resource}:`));
+  const resourcePermissions = permissions.filter((p) =>
+    p.startsWith(`${resource}:`)
+  );
   return resourcePermissions.map((p) => p.split(":")[1] as Action);
 }
 
@@ -270,7 +274,10 @@ export function canAccessData(
 /**
  * Matrice de permissions pour affichage (debugging/admin)
  */
-export function getPermissionMatrix(): Record<UserRole, { permissions: Permission[]; scope: PermissionScope }> {
+export function getPermissionMatrix(): Record<
+  UserRole,
+  { permissions: Permission[]; scope: PermissionScope }
+> {
   return ROLE_PERMISSIONS;
 }
 

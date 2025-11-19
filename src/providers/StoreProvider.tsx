@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { useAuthStore } from '@/stores/authStore';
-import { useAgentStore } from '@/stores/agentStore';
+import React, { useEffect } from "react";
+import { useAuthStore } from "@/stores/authStore";
+import { useAgentStore } from "@/stores/agentStore";
+import { useThemeStore } from "@/stores/themeStore";
 
 interface StoreProviderProps {
   children: React.ReactNode;
@@ -14,10 +15,10 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   useEffect(() => {
     // Initialiser l'auth store - charge depuis localStorage automatiquement
     const user = useAuthStore.getState().user;
-    const isSessionExpired = useAuthStore.getState().isSessionExpired();
+    const isSessionExpired = useAuthStore.getState().isSessionExpired;
 
     if (user && isSessionExpired()) {
-      console.warn('⚠️ Session expirée, déconnexion automatique');
+      console.warn("⚠️ Session expirée, déconnexion automatique");
       useAuthStore.getState().clearSession();
     }
 
@@ -25,9 +26,12 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     const agents = useAgentStore.getState().agents;
     if (agents.length === 0) {
       // Charger les agents au démarrage si le store est vide
-      useAgentStore.getState().fetchAgents().catch((error) => {
-        console.error('Erreur lors de l\'initialisation des agents:', error);
-      });
+      useAgentStore
+        .getState()
+        .fetchAgents()
+        .catch((error) => {
+          console.error("Erreur lors de l'initialisation des agents:", error);
+        });
     }
   }, []);
 

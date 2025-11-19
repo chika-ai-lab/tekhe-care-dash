@@ -27,14 +27,15 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
+import { useThemeStore } from "@/stores/themeStore";
 import { UserRole } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
 interface MenuItem {
   title: string;
   url: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   allowedRoles: UserRole[];
 }
 
@@ -129,8 +130,8 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { open } = useSidebar();
-  const { hasRole, logout } = useAuth();
-  const [darkMode, setDarkMode] = useState(false);
+  const { hasRole, logout } = useAuthStore();
+  const { theme, setTheme, resolvedTheme } = useThemeStore();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter menu items based on user role
@@ -152,8 +153,8 @@ export function AppSidebar() {
   };
 
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
   };
 
   return (
@@ -229,7 +230,7 @@ export function AppSidebar() {
 
           <SidebarMenuItem>
             <div className="flex items-center gap-3 px-3 py-2.5">
-              {darkMode ? (
+              {resolvedTheme === "dark" ? (
                 <Moon className="h-5 w-5 shrink-0 text-muted-foreground" />
               ) : (
                 <Sun className="h-5 w-5 shrink-0 text-muted-foreground" />
@@ -237,9 +238,12 @@ export function AppSidebar() {
               {open && (
                 <>
                   <span className="text-sm text-muted-foreground flex-1">
-                    {darkMode ? "Mode sombre" : "Mode clair"}
+                    {resolvedTheme === "dark" ? "Mode sombre" : "Mode clair"}
                   </span>
-                  <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
+                  <Switch
+                    checked={resolvedTheme === "dark"}
+                    onCheckedChange={toggleDarkMode}
+                  />
                 </>
               )}
             </div>

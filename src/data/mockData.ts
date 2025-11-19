@@ -1080,5 +1080,6 @@ export const mockHealthAgents: HealthAgent[] = [
     code_enrolement: "AS2025002",
     lien_telecharger: "https://app.tekhe.sn/download/HA005",
     sms_envoye: false,
+    compte_cree: false,
   },
 ];

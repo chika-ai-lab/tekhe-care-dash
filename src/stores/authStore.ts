@@ -106,6 +106,20 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage", // localStorage key
+      version: 1,
+      migrate: (persistedState: unknown, version: number) => {
+        if (version === 0) {
+          // Migration from version 0 to 1
+          // If the persisted state has old structure, transform it
+          const state = persistedState as Record<string, unknown>;
+          return {
+            user: state.user || null,
+            isAuthenticated: state.isAuthenticated || false,
+            lastLoginTime: state.lastLoginTime || null,
+          };
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         user: state.user,
         lastLoginTime: state.lastLoginTime,
