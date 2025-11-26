@@ -1,0 +1,66 @@
+# Configuration Netlify pour TEKHE
+# Gère les redirections pour React Router et les en-têtes de sécurité
+
+[build]
+  # Commande de build
+  command = "npm run build"
+  # Dossier de sortie
+  publish = "dist"
+
+# Redirections pour React Router
+# Toutes les routes non trouvées doivent rediriger vers index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+# En-têtes de sécurité pour toutes les pages
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Protection contre le clickjacking
+    X-Frame-Options = "DENY"
+    # Protection XSS
+    X-XSS-Protection = "1; mode=block"
+    # Empêche le sniffing MIME
+    X-Content-Type-Options = "nosniff"
+    # Référer policy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Permissions Policy
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# En-têtes de cache pour les assets statiques
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# En-têtes de cache pour les fichiers HTML (pas de cache)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Configuration pour les SPA (Single Page Applications)
+[build.environment]
+  NODE_VERSION = "18"
+
+# Prévention des builds cassés
+[build.processing]
+  skip_processing = false
+
+# Optimisations
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true

@@ -292,6 +292,61 @@ if (can(Permissions.NEW_RESOURCE_CREATE)) { ... }
 
 ---
 
+## Déploiement Netlify
+
+### Configuration automatique
+
+Le projet est configuré pour Netlify avec :
+- ✅ `netlify.toml` - Configuration principale
+- ✅ `public/_redirects` - Backup pour React Router
+- ✅ Redirections SPA automatiques
+- ✅ En-têtes de sécurité
+- ✅ Cache optimisé
+
+### Déploiement
+
+1. **Via GitHub** (recommandé)
+   ```bash
+   # Connecter le repo à Netlify
+   # Netlify détectera automatiquement la configuration
+   ```
+
+2. **Via Netlify CLI**
+   ```bash
+   # Installer Netlify CLI
+   npm install -g netlify-cli
+
+   # Login
+   netlify login
+
+   # Déployer
+   netlify deploy --prod
+   ```
+
+3. **Via drag & drop**
+   ```bash
+   # Build local
+   npm run build
+
+   # Drag & drop du dossier dist/ sur Netlify
+   ```
+
+### Variables d'environnement
+
+Si vous utilisez des variables d'environnement, configurez-les dans Netlify :
+- Site settings > Environment variables
+
+### Vérification
+
+Après déploiement, testez :
+- ✅ Page d'accueil charge
+- ✅ Navigation fonctionne
+- ✅ Rafraîchissement sur `/dashboard/*` ne donne pas 404
+- ✅ Login fonctionne
+- ✅ Routes protégées redirigent vers login
+
+---
+
 ## Contribution
 
 1. Fork le projet

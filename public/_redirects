@@ -1,0 +1,5 @@
+# Redirections Netlify pour React Router
+# Ce fichier est un backup au cas où netlify.toml ne serait pas lu
+# Toutes les routes doivent rediriger vers index.html avec un code 200 (rewrite, pas redirect)
+
+/*    /index.html   200
