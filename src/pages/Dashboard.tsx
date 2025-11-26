@@ -1,8 +1,8 @@
 import { KPICard } from "@/components/KPICard";
-import { mockPatients, mockRisquesIA, mockReferencesSonu, mockVisites, mockStructures } from "@/data/mockData";
-import { 
-  Users, 
-  Calendar, 
+import { mockPatients, mockRisquesIA, mockReferencesSonu, mockVisites, mockStructures, mockVisitesCPoN, mockVaccins } from "@/data/mockData";
+import {
+  Users,
+  Calendar,
   Baby,
   AlertTriangle,
   Ambulance,
@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import PartenaireAnalytics from "./dashboard/PartenaireAnalytics";
-import { filterPatientsByUser, filterRisquesByUser, filterReferencesByUser } from "@/lib/dataFilters";
+import { filterPatientsByUser, filterRisquesByUser, filterReferencesByUser, filterVisitesByUser } from "@/lib/dataFilters";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,34 +56,65 @@ export default function Dashboard() {
     });
   }
   
+  // Filtrer les risques, références et visites AVANT les filtres de date
+  // pour que les KPI globaux ne soient pas affectés par les filtres temporels
+  const baseUserPatients = filterPatientsByUser(mockPatients, user);
+
+  // Appliquer le filtre par structure sur les patients de base
+  let baseFilteredPatients = baseUserPatients;
+  if (user?.role === 'responsable_district' && selectedStructure !== "all") {
+    baseFilteredPatients = baseFilteredPatients.filter(p => p.structure === selectedStructure);
+  }
+
   const userRisques = filterRisquesByUser(mockRisquesIA, mockPatients, user);
   const userReferences = filterReferencesByUser(mockReferencesSonu, mockPatients, user);
-  
-  // Calculer les KPI à partir des données filtrées
-  const patientes_totales = userPatients.length;
-  const cpn1_realisees = userPatients.filter(p => {
-    const visites = mockVisites.filter(v => v.patient_id === p.id && v.type === 'CPN1' && v.statut === 'realise');
+  const userVisites = filterVisitesByUser(mockVisites, mockPatients, user);
+
+  // Calculer les KPI à partir des données filtrées (SANS filtre de date pour les KPI globaux)
+  const patientes_totales = baseFilteredPatients.length;
+  const cpn1_realisees = baseFilteredPatients.filter(p => {
+    const visites = userVisites.filter(v => v.patient_id === p.id && v.type === 'CPN1' && v.statut === 'realise');
     return visites.length > 0;
   }).length;
   const cpn1_cible = patientes_totales;
-  const cpn4_realisees = userPatients.filter(p => {
-    const visites = mockVisites.filter(v => v.patient_id === p.id && v.type === 'CPN4' && v.statut === 'realise');
+  const cpn4_realisees = baseFilteredPatients.filter(p => {
+    const visites = userVisites.filter(v => v.patient_id === p.id && v.type === 'CPN4' && v.statut === 'realise');
     return visites.length > 0;
   }).length;
   const cpn4_cible = Math.floor(patientes_totales * 0.76); // Estimation basée sur les données mock
-  
+
   const risques_rouge = userRisques.filter(r => r.niveau === 'rouge').length;
   const risques_orange = userRisques.filter(r => r.niveau === 'orange').length;
   const risques_vert = userRisques.filter(r => r.niveau === 'vert').length;
-  
-  const csu_enrolled = userPatients.length;
-  const csu_actifs = userPatients.filter(p => p.statut_csu === 'actif').length;
-  const csu_a_renouveler = userPatients.filter(p => p.statut_csu === 'a_renouveler').length;
-  
+
+  const csu_enrolled = baseFilteredPatients.length;
+  const csu_actifs = baseFilteredPatients.filter(p => p.statut_csu === 'actif').length;
+  const csu_a_renouveler = baseFilteredPatients.filter(p => p.statut_csu === 'a_renouveler').length;
+
   const referencesResolved = userReferences.filter(r => r.delai_minutes);
-  const references_delai_moyen = referencesResolved.length > 0 
+  const references_delai_moyen = referencesResolved.length > 0
     ? Math.round(referencesResolved.reduce((sum, r) => sum + (r.delai_minutes || 0), 0) / referencesResolved.length)
     : 0;
+
+  // Calculer les KPI CPoN (Consultations Post-Natales)
+  const basePatientIds = new Set(baseFilteredPatients.map(p => p.id));
+  const userCPoN = mockVisitesCPoN.filter(v => basePatientIds.has(v.patient_id));
+  const cpon_total = userCPoN.length;
+  const cpon_realises = userCPoN.filter(v => v.statut === 'realise').length;
+  const cpon_pourcentage = cpon_total > 0 ? Math.round((cpon_realises / cpon_total) * 100) : 0;
+
+  // Calculer les KPI PEV (Programme Élargi de Vaccination)
+  const userVaccins = mockVaccins.filter(v => basePatientIds.has(v.patient_id));
+  const pev_total = userVaccins.length;
+  const pev_realises = userVaccins.filter(v => v.statut === 'realise').length;
+  const pev_pourcentage = pev_total > 0 ? Math.round((pev_realises / pev_total) * 100) : 0;
+
+  // Calculer la létalité obstétricale (simulée - nécessiterait des données de décès)
+  // Pour l'instant, on garde une valeur indicative basée sur les risques rouges
+  // Éviter division par zéro
+  const letalite_taux = patientes_totales > 0 && risques_rouge > 0
+    ? ((risques_rouge / patientes_totales) * 1000).toFixed(1)
+    : "0.0";
 
   // Fonction d'export CSV
   const handleExportCSV = () => {
@@ -215,10 +246,11 @@ export default function Dashboard() {
         
         <KPICard
           title="CPON 6-42j"
-          value="68.5%"
+          value={`${cpon_pourcentage}%`}
           icon={Baby}
-          color="green"
-          progress={68.5}
+          color={cpon_pourcentage >= 70 ? "green" : cpon_pourcentage >= 50 ? "orange" : "red"}
+          progress={cpon_pourcentage}
+          subtitle={`${cpon_realises}/${cpon_total} réalisées`}
         />
         
         <KPICard
@@ -271,17 +303,18 @@ export default function Dashboard() {
         
         <KPICard
           title="PEV doses complètes"
-          value="87.3%"
+          value={`${pev_pourcentage}%`}
           icon={Syringe}
-          color="green"
-          progress={87.3}
+          color={pev_pourcentage >= 85 ? "green" : pev_pourcentage >= 70 ? "orange" : "red"}
+          progress={pev_pourcentage}
+          subtitle={`${pev_realises}/${pev_total} doses`}
         />
         
         <KPICard
           title="Létalité obstétricale"
-          value="2.4‰"
+          value={`${letalite_taux}‰`}
           icon={Activity}
-          color="orange"
+          color={Number(letalite_taux) <= 2 ? "green" : Number(letalite_taux) <= 5 ? "orange" : "red"}
           subtitle="Pour 1000 naissances"
         />
       </div>
